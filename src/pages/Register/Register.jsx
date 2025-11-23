@@ -1,30 +1,42 @@
 import { useFormik } from "formik";
-import style from "./Register.module.css";
 import logo from "../../assets/whiteLogo.png";
 import * as Yup from 'yup';
 import axios from 'axios'
 import { useState } from "react";
 import toast from 'react-hot-toast';
+import { Link, useNavigate } from "react-router-dom";
 
 function Register() {
-  const [apiError, setapiError] = useState('');
+  // const [apiError, setapiError] = useState('');
   const [isLoading, setisLoading] = useState(false);
+  const navigate = useNavigate();
 
+  // validation schema
   let validationSchema = Yup.object().shape({
     name: Yup.string().min(3, 'name minlenght is 3').max(10, 'name maxlenght is 10').required('name is required'),
     email: Yup.string().email('email is invalid').required('email is required'),
     phone: Yup.string().matches(/^01[0125][0-9]{8}$/, 'phone must be a valid egyptian number').required('phone is required'),
-    password: Yup.string().matches(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$/, 'password must start with uppercase letter then from 5 to 10 small letters or numbers').required('passsword is required'),
+    password: Yup.string().matches(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$/, 'password must contain at least one uppercase letter, one lowercase letter, one number and one special character').required('passsword is required'),
     rePassword: Yup.string().oneOf([Yup.ref('password')], "password doesn't match").required('passsword is required'),
-  }) 
+  })
 
+// handle register
   function handleRegister(formValues) {
     setisLoading(true);
-    
     console.log(formValues);
     axios.post(`https://ecommerce.routemisr.com/api/v1/auth/signup`, formValues)
-    .then((x)=>{console.log(x)})
-    .catch((x)=>{console.log(x)})
+    .then((apiResponse)=> {
+      console.log(apiResponse);
+      navigate('/');
+      setisLoading(false);
+      toast.success('Registerd Successfully!');
+      })
+    
+    .catch((apiResponse)=>{
+      console.log(apiResponse);
+      setisLoading(false);
+      toast.error(apiResponse?.response?.data?.message);
+    })
   }
 
   let formik = useFormik({
@@ -41,13 +53,13 @@ function Register() {
 
   return (
     <>
-      <div className={`flex justify-center items-center ${style.layout}`}>
-          <div className="w-1/3 m-auto py-15 px-5 bg-neutral-800/75 rounded-md">
+      <div className="flex justify-center items-center layout">
+          <div className="lg:w-1/3 m-auto py-15 px-5 bg-neutral-800/75 rounded-md">
           <div className="mb-5">
             <img src={logo} alt="logo" className="m-auto w-30" />
             <p className="text-greenValley font-kaushan text-center">Make it fresh every day, Register Now!</p>
           </div>
-            <form onSubmit={formik.handleSubmit} className="w-3/4 m-auto">
+            <form onSubmit={formik.handleSubmit} className="lg:w-3/4 m-auto">
             {/* name */}
               <div className="relative z-0">
                 <input
@@ -76,7 +88,6 @@ function Register() {
               : null}
 
             {/* phone */}
-            <div></div>
               <div className="relative z-0 mt-5">
                 <input
                   type="text"
@@ -98,7 +109,7 @@ function Register() {
               </div>
                 {formik.errors.phone && formik.touched.phone?
               <div className="text-red-500 text-xs md:text-sm mt-1">
-                <i class="fa-solid fa-exclamation"></i>
+                <i className="fa-solid fa-exclamation"></i>
                  <span> {formik.errors.phone} </span>
               </div>
               : null}
@@ -185,13 +196,17 @@ function Register() {
               : null}
 
             {/* submit button */}
-              <button type="submit" className="btn mt-5 bg-greenValley text-white border-greenValley shadow-sm  hover:text-wgreenValley hover:bg-transparent duration-500!">
+            <div className="flex items-baseline gap-3">
+                <button type="submit" className="btn mt-5 bg-greenValley text-white border-greenValley shadow-sm  hover:text-greenValley hover:bg-transparent duration-500!">
                 {isLoading? <i className="fas fa-spinner fa-spin"></i>:"Register"}
               </button>
+
+              <span className="text-white">Already have an account? <Link to="/login" className="font-semibold hover:text-greenValley duration-500!">Login</Link></span>
+            </div>
+            
             </form>
           </div>
       </div>
-      {/* absolute top-0 right-0 left-0 bottom-0 z-10 */}
     </>
   );
 }
